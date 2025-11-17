@@ -719,6 +719,12 @@ def match_images(model, image_0, image_1, conf, device="cpu"):
             "line_keypoints0_orig": kpts0_origin,
             "line_keypoints1_orig": kpts1_origin,
         }
+    if "img0_extract_t" in pred.keys():
+        ret["img0_extract_t"] = pred["img0_extract_t"]
+    if "img1_extract_t" in pred.keys():
+        ret["img1_extract_t"] = pred["img1_extract_t"]
+    if "match_t" in pred.keys():
+        ret["match_t"] = pred["match_t"]
     del pred
     torch.cuda.empty_cache()
     return ret

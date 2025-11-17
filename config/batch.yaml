@@ -1,0 +1,219 @@
+server:
+  name: "0.0.0.0"
+  port: 7860
+
+defaults:
+  setting_threshold: 0.1
+  max_keypoints: 1000
+  keypoint_threshold: 0.05
+  enable_ransac: true
+  ransac_method: CV2_USAC_MAGSAC
+  ransac_reproj_threshold: 8
+  ransac_confidence: 0.9999
+  ransac_max_iter: 10000
+  ransac_num_samples: 4
+  match_threshold: 0.2
+  setting_geometry: Fundamental
+
+matcher_zoo:
+  # example config
+  Example:
+    # show in `Matching Model` or not, default: true
+    enable: false
+    # matcher name
+    matcher: example
+    # skip ci or not, default: false
+    skip_ci: true
+    # dense matcher or not, default: true
+    dense: true
+    # info
+    info:
+      # dispaly name in `Matching Model`
+      name: example(example)
+      # conference/journal/workshop Year
+      source: "CVPR XXXX"
+      # github link
+      github: https://github.com/example/example
+      # paper link
+      paper: https://arxiv.org/abs/xxxx.xxxx
+      # project link
+      project: https://example.com
+      # show in `support algos` table
+      display: false
+      # low, medium, high
+      efficiency: low
+  xfeat(sparse):
+    matcher: NN-mutual
+    feature: xfeat
+    dense: false
+    info:
+      name: XFeat #dispaly name
+      source: "CVPR 2024"
+      github: https://github.com/verlab/accelerated_features
+      paper: https://arxiv.org/abs/2404.19174
+      project: null
+      display: true
+  xfeat+lightglue:
+    enable: true
+    matcher: xfeat_lightglue
+    dense: true
+    info:
+      name: xfeat+lightglue
+      source: "CVPR 2024"
+      github: https://github.com/Vincentqyw/omniglue-onnx
+      paper: https://arxiv.org/abs/2405.12979
+      project: https://hwjiang1510.github.io/OmniGlue
+      display: true
+  # xfeat+lightglue:
+  #   matcher: xfeat-lightglue
+  #   feature: xfeat
+  #   dense: false
+  #   info:
+  #     name: LightGlue #dispaly name
+  #     source: "ICCV 2023"
+  #     github: https://github.com/cvg/LightGlue
+  #     paper: https://arxiv.org/pdf/2306.13643
+  #     project: null
+  #     display: true
+  liftfeat(sparse):
+    matcher: NN-mutual
+    feature: liftfeat
+    dense: false
+    info:
+      name: LiftFeat #dispaly name
+      source: "ICRA 2025"
+      github: https://github.com/lyp-deeplearning/LiftFeat
+      paper: https://arxiv.org/abs/2505.0342
+      project: null
+      display: true
+  rdd(sparse):
+    enable: false
+    matcher: NN-mutual
+    feature: rdd
+    dense: false
+    info:
+      name: RDD(sparse) #dispaly name
+      source: "CVPR 2025"
+      github: https://github.com/xtcpete/rdd
+      paper: https://arxiv.org/abs/2505.08013
+      project: https://xtcpete.github.io/rdd
+      display: true
+  superpoint+superglue:
+    matcher: superglue
+    feature: superpoint_max
+    dense: false
+    info:
+      name: SuperGlue #dispaly name
+      source: "CVPR 2020"
+      github: https://github.com/magicleap/SuperGluePretrainedNetwork
+      paper: https://arxiv.org/abs/1911.11763
+      project: null
+      display: true
+  superpoint+lightglue:
+    matcher: superpoint-lightglue
+    feature: superpoint_max
+    dense: false
+    info:
+      name: LightGlue #dispaly name
+      source: "ICCV 2023"
+      github: https://github.com/cvg/LightGlue
+      paper: https://arxiv.org/pdf/2306.13643
+      project: null
+      display: true
+  sift+lightglue:
+    matcher: sift-lightglue
+    feature: sift
+    dense: false
+    info:
+      name: LightGlue #dispaly name
+      source: "ICCV 2023"
+      github: https://github.com/cvg/LightGlue
+      paper: https://arxiv.org/pdf/2306.13643
+      project: null
+      display: true
+  disk+lightglue:
+    matcher: disk-lightglue
+    feature: disk
+    dense: false
+    info:
+      name: LightGlue
+      source: "ICCV 2023"
+      github: https://github.com/cvg/LightGlue
+      paper: https://arxiv.org/pdf/2306.13643
+      project: null
+      display: true
+  aliked+lightglue:
+    enable: true
+    matcher: aliked-lightglue
+    feature: aliked-n16
+    dense: false
+    info:
+      name: ALIKED
+      source: "ICCV 2023"
+      github: https://github.com/Shiaoming/ALIKED
+      paper: https://arxiv.org/pdf/2304.03608.pdf
+      project: null
+      display: true
+  alike:
+    enable: false
+    matcher: NN-mutual
+    feature: alike
+    dense: false
+    info:
+      name: ALIKE #dispaly name
+      source: "TMM 2022"
+      github: https://github.com/Shiaoming/ALIKE
+      paper: https://arxiv.org/abs/2112.02906
+      project: null
+      display: true
+  r2d2:
+    matcher: NN-mutual
+    feature: r2d2
+    dense: false
+    info:
+      name: R2D2 #dispaly name
+      source: "NeurIPS 2019"
+      github: https://github.com/naver/r2d2
+      paper: https://arxiv.org/abs/1906.06195
+      project: null
+      display: true
+  darkfeat:
+    matcher: NN-mutual
+    feature: darkfeat
+    dense: false
+    info:
+      name: DarkFeat #dispaly name
+      source: "AAAI 2023"
+      github: https://github.com/THU-LYJ-Lab/DarkFeat
+      paper: null
+      project: null
+      display: true
+  sift:
+    matcher: NN-mutual
+    feature: sift
+    dense: false
+    info:
+      name: SIFT #dispaly name
+      source: "IJCV 2004"
+      github: null
+      paper: https://www.cs.ubc.ca/~lowe/papers/ijcv04.pdf
+      project: null
+      display: true
+  orb:
+    matcher: NN-ORB
+    feature: orb
+    dense: false
+    info:
+      name: ORB #dispaly name
+      source: "ICCV 2011"
+      github: null
+      paper: TBD
+      project: null
+      display: true
+retrieval_zoo:
+  netvlad:
+    enable: true
+  openibl:
+    enable: true
+  cosplace:
+    enable: true

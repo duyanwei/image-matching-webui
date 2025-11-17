@@ -1,0 +1,87 @@
+
+
+matcher_zoo:
+  xfeat(sparse):
+    enable: false
+    matcher: NN-mutual
+    feature: xfeat
+    dense: false
+    info:
+      name: XFeat #dispaly name
+      source: "CVPR 2024"
+      github: https://github.com/verlab/accelerated_features
+      paper: https://arxiv.org/abs/2404.19174
+      project: null
+      display: true
+  xfeat+lightglue:
+    enable: true
+    matcher: xfeat_lightglue
+    dense: true
+    info:
+      name: xfeat+lightglue
+      source: "CVPR 2024"
+      github: https://github.com/Vincentqyw/omniglue-onnx
+      paper: https://arxiv.org/abs/2405.12979
+      project: https://hwjiang1510.github.io/OmniGlue
+      display: true
+  sift:
+    enable: true
+    matcher: NN-mutual
+    feature: sift
+    dense: false
+    info:
+      name: SIFT #dispaly name
+      source: "IJCV 2004"
+      github: null
+      paper: https://www.cs.ubc.ca/~lowe/papers/ijcv04.pdf
+      project: null
+      display: true
+  orb:
+    enable: true
+    matcher: NN-ORB
+    feature: orb
+    dense: false
+    info:
+      name: ORB #dispaly name
+      source: "ICCV 2011"
+      github: null
+      paper: TBD
+      project: null
+      display: true
+  superpoint+superglue:
+    enable: true
+    matcher: superglue
+    feature: superpoint_max
+    dense: false
+    info:
+      name: SuperGlue #dispaly name
+      source: "CVPR 2020"
+      github: https://github.com/magicleap/SuperGluePretrainedNetwork
+      paper: https://arxiv.org/abs/1911.11763
+      project: null
+      display: true
+  superpoint+lightglue:
+    enable: false
+    matcher: superpoint-lightglue
+    feature: superpoint_max
+    dense: false
+    info:
+      name: LightGlue #dispaly name
+      source: "ICCV 2023"
+      github: https://github.com/cvg/LightGlue
+      paper: https://arxiv.org/pdf/2306.13643
+      project: null
+      display: true
+  sift+lightglue:
+    enable: false
+    matcher: sift-lightglue
+    feature: sift
+    dense: false
+    info:
+      name: LightGlue #dispaly name
+      source: "ICCV 2023"
+      github: https://github.com/cvg/LightGlue
+      paper: https://arxiv.org/pdf/2306.13643
+      project: null
+      display: true
+

@@ -82,6 +82,24 @@ confs = {
             "force_resize": False,
         },
     },
+    # "xfeat-lightglue": {
+    #     "output": "matches-xfeat-lightglue",
+    #     "model": {
+    #         "name": "lightglue",
+    #         "match_threshold": 0.2,
+    #         "width_confidence": 0.99,  # for point pruning
+    #         "depth_confidence": 0.95,  # for early stopping,
+    #         "features": "xfeat",
+    #         "add_scale_ori": True,
+    #         "model_name": "xfeat_lightglue.pt",
+    #     },
+    #     "preprocessing": {
+    #         "grayscale": True,
+    #         "resize_max": 1024,
+    #         "dfactor": 8,
+    #         "force_resize": False,
+    #     },
+    # },
     "sift-lightglue": {
         "output": "matches-sift-lightglue",
         "model": {
@@ -147,6 +165,15 @@ confs = {
         "model": {
             "name": "nearest_neighbor",
             "do_mutual_check": True,
+            "match_threshold": 0.2,
+        },
+    },
+    "NN-ORB": {
+        "output": "matches-NN-ORB-mutual-ratio.8",
+        "model": {
+            "name": "nn_orb",
+            "do_mutual_check": True,
+            "ratio_threshold": 0.8,
             "match_threshold": 0.2,
         },
     },

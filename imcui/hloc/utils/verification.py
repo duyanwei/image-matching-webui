@@ -1,20 +1,13 @@
-import numpy as np
-import pycolmap
-
-
-def to_homogeneous(p):
-    return np.pad(p, ((0, 0),) * (p.ndim - 1) + ((0, 1),), constant_values=1)
-
-
-def compute_epipolar_errors(j_from_i: pycolmap.Rigid3d, p2d_i, p2d_j):
-    j_E_i = j_from_i.essential_matrix()
-    l2d_j = to_homogeneous(p2d_i) @ j_E_i.T
-    l2d_i = to_homogeneous(p2d_j) @ j_E_i
-    dist = np.abs(np.sum(to_homogeneous(p2d_i) * l2d_i, axis=1))
-    errors_i = dist / np.linalg.norm(l2d_i[:, :2], axis=1)
-    errors_j = dist / np.linalg.norm(l2d_j[:, :2], axis=1)
-    return errors_i, errors_j
-
+#!/usr/bin/env python
+# -*-coding:utf-8 -*-
+"""
+@file verification.py
+@author Yanwei Du (yanwei.du@gatech.edu)
+@date 11-18-2025
+@version 1.0
+@license Copyright (c) 2025
+@desc None
+"""
 
 import cv2
 import numpy as np
@@ -47,17 +40,15 @@ def F_from_relative_pose(T_rel: np.ndarray, K: np.ndarray) -> np.ndarray:
     return F
 
 
-def to_homogeneous_bench(pts: np.ndarray):
+def to_homogeneous(pts: np.ndarray):
     assert pts.shape[0] > 0
     return np.hstack((pts, np.ones((pts.shape[0], 1))))
 
 
-def compute_epipolar_errors_bench(pts0, pts1, F) -> float:
+def compute_epipolar_errors(pts0, pts1, F) -> float:
     assert pts0.shape[0] == pts1.shape[0]
-    hpts0 = to_homogeneous_bench(pts0)
-    hpts1 = to_homogeneous_bench(pts1)
     distances = []
-    for p0, p1 in zip(hpts0, hpts1):
+    for p0, p1 in zip(pts0, pts1):
         l1 = F @ p0
         # Normalize line (a x + b y + c = 0)
         norm = np.sqrt(l1[0] ** 2 + l1[1] ** 2)
@@ -71,51 +62,32 @@ def compute_epipolar_errors_bench(pts0, pts1, F) -> float:
     return avg_distance
 
 
-def compute_pose_error(R_est, t_est, R_gt, t_gt) -> Tuple[float, float, float]:
-    t_est = np.squeeze(t_est)
-    t_gt = np.squeeze(t_gt)
+def compute_pose_error(R_est, t_est, R_gt, t_gt) -> Tuple[float, float]:
     t_err = np.linalg.norm(t_est - t_gt)
     r_err = np.degrees(np.arccos(np.clip((np.trace(R_gt.T @ R_est) - 1) / 2, -1, 1)))
-
-    T_est = np.eye(4)
-    T_est[:3, :3] = R_est
-    T_est[:3, 3] = t_est
-    T_gt = np.eye(4)
-    T_gt[:3, :3] = R_gt
-    T_gt[:3, 3] = t_gt
-    T_err = np.linalg.inv(T_gt) @ T_est
-
-    return (t_err, r_err, np.linalg.norm(T_err[:3, 3]))
+    return (t_err, r_err)
 
 
 def recover_3d_from_depth_image(
-    query_pts: np.ndarray,
-    query_depth: np.ndarray,
-    train_pts: np.ndarray,
-    train_depth: np.ndarray,
+    pts: np.ndarray,
+    depth: np.ndarray,
     K: np.ndarray,
     depth_scale: float = 1000.0,
     kernel_size: int = 5,
     method: str = "median",
     z_min: float = 0.1,
     z_max: float = 5.0,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    assert train_pts.shape[0] > 0
-    assert train_pts.shape[1] == 2
-    assert query_pts.shape[0] > 0
-    assert query_pts.shape[1] == 2
+) -> np.ndarray:
+    assert pts.shape[0] > 0
+    assert pts.shape[1] == 2
 
-    H, W = query_depth.shape
+    H, W = depth.shape
     pad = kernel_size // 2
-    depth_m = query_depth.astype(np.float32) / depth_scale
+    depth_m = depth.astype(np.float32) / depth_scale
+    pts3d = np.full((len(pts), 3), -1.0, dtype=np.float32)
     K_inv = np.linalg.inv(K)
-
-    obj_pts = []
-    valid_query_pts = []
-    valid_train_pts = []
-    indices = []
-    for i, (query_pt, train_pt) in enumerate(zip(query_pts, train_pts)):
-        u, v = int(round(query_pt[0])), int(round(query_pt[1]))
+    for i, pt in enumerate(pts):
+        u, v = int(round(pt[0])), int(round(pt[1]))
         if u < pad or v < pad or u >= W - pad or v >= H - pad:
             continue  # skip border points
 
@@ -131,15 +103,10 @@ def recover_3d_from_depth_image(
         else:
             z = np.median(values)
 
-        if z <= 0:
-            continue
-        obj_pt = (K_inv @ np.array([u, v, 1.0])) * z
-        obj_pts.append(obj_pt)
-        valid_train_pts.append(train_pt)
-        valid_query_pts.append(query_pt)
-        indices.append(i)
+        if z > 0:
+            pts3d[i] = (K_inv @ np.array([u, v, 1.0])) * z
 
-    return np.array(obj_pts), np.array(valid_query_pts), np.array(valid_train_pts), np.array(indices)
+    return pts3d
 
 
 def pose_array_to_mat(arr):
@@ -168,7 +135,6 @@ def ransac_pnp(
     max_iters=1000,
     confidence=0.999,
     min_required=6,  # >4 tends to be more stable with noise
-    refine=False,
 ):
     """
     Returns:
@@ -201,8 +167,7 @@ def ransac_pnp(
         imagePoints=img_pts,
         cameraMatrix=K.astype(np.float64),
         distCoeffs=distCoeffs,
-        # flags=cv2.SOLVEPNP_ITERATIVE,  # EPnP also fine: SOLVEPNP_EPNP
-        flags=cv2.SOLVEPNP_EPNP,
+        flags=cv2.SOLVEPNP_ITERATIVE,  # EPnP also fine: SOLVEPNP_EPNP
         reprojectionError=float(reproj_thresh_px),
         iterationsCount=int(max_iters),
         confidence=float(confidence),
@@ -222,23 +187,6 @@ def ransac_pnp(
     inlier_count = int(len(inliers))
     inlier_ratio = inlier_count / float(len(obj_pts))
 
-    if refine and inlier_count >= min_required:
-
-        inlier_obj_pts = np.array([obj_pts[idx] for idx in inliers])
-        inlier_img_pts = np.array([img_pts[idx] for idx in inliers])
-        # Refine pose using all inliers (optional)
-        success_refined, rvec_refined, tvec_vec_refined = cv2.solvePnP(
-            inlier_obj_pts,
-            inlier_img_pts,
-            K,
-            distCoeffs,
-            flags=cv2.SOLVEPNP_EPNP,  # Or other desired flags
-        )
-
-        if success_refined:
-            rvec = rvec_refined
-            tvec = tvec_vec_refined
-
     return {
         "success": True,
         "rvec": rvec,  # Rodrigues vector
@@ -247,43 +195,3 @@ def ransac_pnp(
         "inlier_ratio": inlier_ratio,
         "inlier_idx": inliers,
     }
-
-
-def draw_matches(query_im, query_pts, train_im, train_pts, indices_0, indices_1):
-
-    # pts0 = []
-    # pts1 = []
-    # for index in indices_0:
-    #     pts0.append(query_pts[index])
-    #     pts1.append(train_pts[index])
-
-    # kpts0 = []
-    # kpts1 = []
-    # matches = []
-    # count = 0
-    # for index in indices_1:
-    #     match = cv2.DMatch()
-    #     match.queryIdx = count
-    #     match.trainIdx = count
-    #     count += 1
-    #     matches.append(match)
-    #     kpt0 = cv2.KeyPoint()
-    #     kpt0.pt = pts0[index]
-    #     kpts0.append(kpt0)
-    #     kpt1 = cv2.KeyPoint()
-    #     kpt1.pt = pts1[index]
-    #     kpts1.append(kpt1)
-
-    kpts0 = [cv2.KeyPoint(x=pt[0], y=pt[1], size=1) for pt in query_pts]
-    kpts1 = [cv2.KeyPoint(x=pt[0], y=pt[1], size=1) for pt in train_pts]
-
-    matches = [cv2.DMatch(indices_0[i], indices_0[i], 0) for i in indices_1]
-
-    cv_im0 = cv2.cvtColor(query_im, cv2.COLOR_RGB2BGR)
-    cv_im1 = cv2.cvtColor(train_im, cv2.COLOR_RGB2BGR)
-
-    out_im = None
-    out_im = cv2.drawMatches(
-        cv_im0, kpts0, cv_im1, kpts1, matches, None, matchesThickness=1, flags=cv2.DrawMatchesFlags_DEFAULT
-    )
-    return out_im

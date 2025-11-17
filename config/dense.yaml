@@ -1,0 +1,59 @@
+
+
+matcher_zoo:
+  # xfeat+lightglue:
+  #   enable: true
+  #   matcher: xfeat_lightglue
+  #   dense: true
+  #   info:
+  #     name: xfeat+lightglue
+  #     source: "CVPR 2024"
+  #     github: https://github.com/Vincentqyw/omniglue-onnx
+  #     paper: https://arxiv.org/abs/2405.12979
+  #     project: https://hwjiang1510.github.io/OmniGlue
+  #     display: true
+  # Mast3R:
+  #   enable: true
+  #   matcher: mast3r
+  #   dense: true
+  #   skip_ci: false
+  #   info:
+  #     name: Mast3R #dispaly name
+  #     source: "CVPR 2024"
+  #     github: https://github.com/naver/mast3r
+  #     paper: https://arxiv.org/abs/2406.09756
+  #     project: https://dust3r.europe.naverlabs.com
+  #     display: true
+  #     efficiency: low  # low, medium, high
+  aspanformer:
+    matcher: aspanformer
+    dense: true
+    info:
+      name: ASpanformer #dispaly name
+      source: "ECCV 2022"
+      github: https://github.com/Vincentqyw/ml-aspanformer
+      paper: https://arxiv.org/abs/2208.14201
+      project: null
+      display: true
+  eloftr:
+    matcher: eloftr
+    dense: true
+    info:
+      name: Efficient LoFTR #dispaly name
+      source: "CVPR 2024"
+      github: https://github.com/zju3dv/efficientloftr
+      paper: https://zju3dv.github.io/efficientloftr/files/EfficientLoFTR.pdf
+      project: https://zju3dv.github.io/efficientloftr
+      display: true
+  xoftr:
+    matcher: xoftr
+    dense: true
+    info:
+      name: XoFTR #dispaly name
+      source: "CVPR 2024"
+      github: https://github.com/OnderT/XoFTR
+      paper: https://arxiv.org/pdf/2404.09692
+      project: null
+      display: true
+
+

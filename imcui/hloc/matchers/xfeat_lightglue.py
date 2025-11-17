@@ -4,6 +4,8 @@ from .. import logger
 
 from ..utils.base_model import BaseModel
 
+import time
+
 
 class XFeatLightGlue(BaseModel):
     default_conf = {
@@ -16,6 +18,8 @@ class XFeatLightGlue(BaseModel):
     ]
 
     def _init(self, conf):
+        # TODO: this is hardcoded, should be changed at the first level.
+        # self.conf["max_keypoints"] = 1024
         self.net = torch.hub.load(
             "verlab/accelerated_features",
             "XFeat",
@@ -29,11 +33,16 @@ class XFeatLightGlue(BaseModel):
         im0 = data["image0"]
         im1 = data["image1"]
         # Compute coarse feats
+        t0 = time.time()
         out0 = self.net.detectAndCompute(im0, top_k=self.conf["max_keypoints"])[0]
+        t1 = time.time()
         out1 = self.net.detectAndCompute(im1, top_k=self.conf["max_keypoints"])[0]
+        t2 = time.time()
         out0.update({"image_size": (im0.shape[-1], im0.shape[-2])})  # W H
         out1.update({"image_size": (im1.shape[-1], im1.shape[-2])})  # W H
+        t3 = time.time()
         pred = self.net.match_lighterglue(out0, out1)
+        t4 = time.time()
         if len(pred) == 3:
             mkpts_0, mkpts_1, _ = pred
         else:
@@ -46,5 +55,8 @@ class XFeatLightGlue(BaseModel):
             "mkeypoints0": mkpts_0,
             "mkeypoints1": mkpts_1,
             "mconf": torch.ones_like(mkpts_0[:, 0]),
+            "img0_extract_t": t1 - t0,
+            "img1_extract_t": t2 - t1,
+            "match_t": t4 - t3,
         }
         return pred

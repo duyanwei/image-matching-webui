@@ -530,6 +530,17 @@ matcher_zoo:
       paper: https://www.cs.ubc.ca/~lowe/papers/ijcv04.pdf
       project: null
       display: true
+  orb:
+    matcher: NN-ORB
+    feature: orb
+    dense: false
+    info:
+      name: ORB #dispaly name
+      source: "ICCV 2011"
+      github: null
+      paper: TBD
+      project: null
+      display: true
   gluestick:
     enable: true
     matcher: gluestick

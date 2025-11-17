@@ -599,8 +599,10 @@ def compute_geometry(
                     F,
                     imgSize=(w0, h0),
                 )
-                geo_info["H1"] = H1.tolist()
-                geo_info["H2"] = H2.tolist()
+                if H1 is not None:
+                    geo_info["H1"] = H1.tolist()
+                if H2 is not None:
+                    geo_info["H2"] = H2.tolist()
             except cv2.error as e:
                 logger.error(f"StereoRectifyUncalibrated failed, skip! error: {e}")
         return geo_info

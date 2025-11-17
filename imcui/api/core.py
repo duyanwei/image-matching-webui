@@ -7,6 +7,7 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+import time
 
 from ..hloc import extract_features, logger, match_dense, match_features
 from ..hloc.utils.viz import add_text, plot_keypoints
@@ -96,6 +97,9 @@ class ImageMatchingAPI(torch.nn.Module):
 
         self.match_conf = self.conf["matcher"]
 
+    def get_conf(self):
+        return self.conf
+
     def _init_models(self):
         # initialize matcher
         self.matcher = get_model(self.match_conf)
@@ -107,6 +111,7 @@ class ImageMatchingAPI(torch.nn.Module):
 
     def _forward(self, img0, img1):
         if self.dense:
+            t0 = time.time()
             pred = match_dense.match_images(
                 self.matcher,
                 img0,
@@ -117,14 +122,28 @@ class ImageMatchingAPI(torch.nn.Module):
             last_fixed = "{}".format(  # noqa: F841
                 self.match_conf["model"]["name"]
             )
+            elapsed_t = time.time() - t0
+            if "img0_extract_t" not in pred.keys():
+                pred["img0_extract_t"] = -1.0
+            if "img1_extract_t" not in pred.keys():
+                pred["img1_extract_t"] = -1.0
+            if "match_t" not in pred.keys():
+                pred["match_t"] = elapsed_t
         else:
+            t0 = time.time()
             pred0 = extract_features.extract(
                 self.extractor, img0, self.extract_conf["preprocessing"]
             )
+            t1 = time.time()
             pred1 = extract_features.extract(
                 self.extractor, img1, self.extract_conf["preprocessing"]
             )
+            t2 = time.time()
             pred = match_features.match_images(self.matcher, pred0, pred1)
+            t3 = time.time()
+            pred["img0_extract_t"] = t1 - t0
+            pred["img1_extract_t"] = t2 - t1
+            pred["match_t"] = t3 - t2
         return pred
 
     def _convert_pred(self, pred):
@@ -150,7 +169,7 @@ class ImageMatchingAPI(torch.nn.Module):
         """
 
         # setting prams
-        self.extractor.conf["max_keypoints"] = kwargs.get("max_keypoints", 512)
+        self.extractor.conf["max_keypoints"] = kwargs.get("max_keypoints", 1024)
         self.extractor.conf["keypoint_threshold"] = kwargs.get(
             "keypoint_threshold", 0.0
         )
@@ -203,9 +222,12 @@ class ImageMatchingAPI(torch.nn.Module):
         # Take as input a pair of images (not a batch)
         assert isinstance(img0, np.ndarray)
         assert isinstance(img1, np.ndarray)
+        self.pred = None
         self.pred = self._forward(img0, img1)
         if self.conf["ransac"]["enable"]:
+            t0 = time.time()
             self.pred = self._geometry_check(self.pred)
+            self.pred["geom_check_t"] = time.time() - t0
         return self.pred
 
     def _geometry_check(
@@ -236,6 +258,8 @@ class ImageMatchingAPI(torch.nn.Module):
     def visualize(
         self,
         log_path: Optional[Path] = None,
+        prefix: str = "",
+        postfix: str = "",
     ) -> None:
         """
         Visualize the matches.
@@ -246,13 +270,15 @@ class ImageMatchingAPI(torch.nn.Module):
         Returns:
             None
         """
-        if self.conf["dense"]:
-            postfix = str(self.conf["matcher"]["model"]["name"])
-        else:
-            postfix = "{}_{}".format(
-                str(self.conf["feature"]["model"]["name"]),
-                str(self.conf["matcher"]["model"]["name"]),
-            )
+        if len(postfix) == 0:
+            if self.conf["dense"]:
+                postfix = str(self.conf["matcher"]["model"]["name"])
+            else:
+                postfix = "{}_{}".format(
+                    str(self.conf["feature"]["model"]["name"]),
+                    str(self.conf["matcher"]["model"]["name"]),
+                )
+        postfix = "_" + postfix
         titles = [
             "Image 0 - Keypoints",
             "Image 1 - Keypoints",
@@ -288,10 +314,12 @@ class ImageMatchingAPI(torch.nn.Module):
             pred, titles=titles, tag="KPTS_RANSAC"
         )
         if log_path is not None:
-            img_keypoints_path: Path = log_path / f"img_keypoints_{postfix}.png"
-            img_matches_raw_path: Path = log_path / f"img_matches_raw_{postfix}.png"
+            if len(prefix) > 0:
+                prefix = "_" + prefix
+            img_keypoints_path: Path = log_path / f"img_keypoints{prefix}{postfix}.png"
+            img_matches_raw_path: Path = log_path / f"img_matches_raw{prefix}{postfix}.png"
             img_matches_ransac_path: Path = (
-                log_path / f"img_matches_ransac_{postfix}.png"
+                log_path / f"img_matches_ransac{prefix}{postfix}.png"
             )
             cv2.imwrite(
                 str(img_keypoints_path),
@@ -301,8 +329,9 @@ class ImageMatchingAPI(torch.nn.Module):
                 str(img_matches_raw_path),
                 output_matches_raw[:, :, ::-1].copy(),  # RGB -> BGR
             )
-            cv2.imwrite(
-                str(img_matches_ransac_path),
-                output_matches_ransac[:, :, ::-1].copy(),  # RGB -> BGR
-            )
+            if output_matches_ransac is not None:
+                cv2.imwrite(
+                    str(img_matches_ransac_path),
+                    output_matches_ransac[:, :, ::-1].copy(),  # RGB -> BGR
+                )
             plt.close("all")

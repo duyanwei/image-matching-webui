@@ -408,6 +408,7 @@ def display_matches(
     KPTS0_KEY = None
     KPTS1_KEY = None
     confid = None
+    fig = None
     if tag == "KPTS_RAW":
         KPTS0_KEY = "mkeypoints0_orig"
         KPTS1_KEY = "mkeypoints1_orig"
